@@ -9,6 +9,26 @@ namespace Lox.Models
             Source = source;
         }
 
+        private static readonly Dictionary<string, TokenType> _keywords = new()
+        {
+            ["and"] = TokenType.And,
+            ["class"] = TokenType.Class,
+            ["else"] = TokenType.Else,
+            ["false"] = TokenType.False,
+            ["for"] = TokenType.For,
+            ["fun"] = TokenType.Fun,
+            ["if"] = TokenType.If,
+            ["nil"] = TokenType.Nil,
+            ["or"] = TokenType.Or,
+            ["print"] = TokenType.Print,
+            ["return"] = TokenType.Return,
+            ["super"] = TokenType.Super,
+            ["this"] = TokenType.This,
+            ["true"] = TokenType.True,
+            ["var"] = TokenType.Var,
+            ["while"] = TokenType.While
+        };
+
         public string Source { get; set; }
         public List<Token> Tokens { get; set; } = new List<Token>();
         private int Start = 0;
@@ -83,6 +103,10 @@ namespace Lox.Models
                     {
                         HandleNumber();
                     }
+                    else if (IsAlpha(c))
+                    {
+                        HandleIdentifier();
+                    }
                     else
                     {
                         ErrorReporter.Error(Line, $"Unexpected character '{c}'.");
@@ -135,6 +159,23 @@ namespace Lox.Models
             return Source[Current + 1];
         }
 
+        private bool IsDigit(char c)
+        {
+            return c >= '0' && c <= '9';
+        }
+
+        private bool IsAlpha(char c)
+        {
+            return (c >= 'a' && c <= 'z') ||
+                   (c >= 'A' && c <= 'Z') ||
+                   (c == '_');
+        }
+
+        private bool IsAlphaNumeric(char c)
+        {
+            return IsAlpha(c) || IsDigit(c); 
+        }
+
         private void HandleString()
         {
             while (Peek() != '"' && !IsAtEnd()) 
@@ -157,11 +198,6 @@ namespace Lox.Models
             AddToken(TokenType.String, value);
         }
 
-        private bool IsDigit(char c)
-        {
-            return c >= '0' && c <= '9';
-        }
-
         private void HandleNumber()
         {
             while (IsDigit(Peek()))
@@ -180,6 +216,23 @@ namespace Lox.Models
             }
 
             AddToken(TokenType.Number, double.Parse(Source.Substring(Start, Current)));
+        }
+
+        private void HandleIdentifier()
+        {
+            while (IsAlphaNumeric(Peek()))
+            {
+                Advance();
+            }
+
+            string text = Source.Substring(Start, Current);
+            TokenType type;
+            if (!_keywords.TryGetValue(text, out type))
+            {
+                type = TokenType.Identifier;
+            }
+
+            AddToken(type);
         }
 
         private void AddToken(TokenType type, object? literal = null)
