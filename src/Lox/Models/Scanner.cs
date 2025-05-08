@@ -83,6 +83,10 @@ namespace Lox.Models
                             Advance();
                         }
                     }
+                    else if (Match('*'))
+                    {
+                        HandleBlockComment();
+                    }
                     else
                     {
                         AddToken(TokenType.Slash); 
@@ -234,6 +238,41 @@ namespace Lox.Models
 
             AddToken(type);
         }
+
+        private void HandleBlockComment()
+        {
+            int nesting = 1;
+
+            while (nesting > 0 && !IsAtEnd())
+            {
+                if (Peek() == '/' && PeekNext() == '*')
+                {
+                    Advance();
+                    Advance();
+                    nesting++;
+                }
+                else if (Peek() == '*' && PeekNext() == '/')
+                {
+                    Advance();
+                    Advance();
+                    nesting--;
+                }
+                else
+                {
+                    if (Peek() == '\n') 
+                    {
+                        Line++;
+                    } 
+                    Advance();
+                }
+            }
+
+            if (nesting > 0)
+            {
+                ErrorReporter.Error(Line, "Unterminated block comment.");
+            }
+        }
+
 
         private void AddToken(TokenType type, object? literal = null)
         {
