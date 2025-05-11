@@ -1,4 +1,5 @@
 ﻿using Lox.Enums;
+using System.Globalization;
 
 namespace Lox.Models
 {
@@ -198,7 +199,7 @@ namespace Lox.Models
             }
 
             Advance();
-            string value = Source.Substring(Start + 1, Current - 1);
+            string value = Source.Substring(Start + 1, Current - Start - 2);
             AddToken(TokenType.String, value);
         }
 
@@ -219,7 +220,7 @@ namespace Lox.Models
                 }
             }
 
-            AddToken(TokenType.Number, double.Parse(Source.Substring(Start, Current)));
+            AddToken(TokenType.Number, double.Parse(Source[Start..Current], CultureInfo.InvariantCulture));
         }
 
         private void HandleIdentifier()
@@ -229,7 +230,7 @@ namespace Lox.Models
                 Advance();
             }
 
-            string text = Source.Substring(Start, Current);
+            string text = Source[Start..Current];
             TokenType type;
             if (!_keywords.TryGetValue(text, out type))
             {
